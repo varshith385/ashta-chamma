@@ -3,3 +3,8 @@ dist/
 .env
 .env.local
 *.log
+restore.cjs
+test-debug.ts
+update_phase2.cjs
+update_phase3.cjs
+update_phase4.cjs
