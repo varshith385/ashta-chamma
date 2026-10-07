@@ -323,16 +323,14 @@ BOARD AND HOMES GRID
   display: flex;
   align-items: center;
   justify-content: center;
-  transform: rotateX(-8deg) translateY(-2px);
+  transform: rotateX(-8deg) translateY(-2px) translateZ(5px);
+}
+.piece.clickable {
+  cursor: pointer;
+  z-index: 10;
 }
 .piece:hover {
-  transform: rotateX(-8deg) scale(1.08) translateY(-5px);
-}
-.piece.dimmed {
-  opacity: 0.6;
-}
-.piece:hover {
-  transform: scale(1.05);
+  transform: rotateX(-8deg) scale(1.08) translateY(-5px) translateZ(5px);
 }
 .piece.dimmed {
   opacity: 0.6;
@@ -576,13 +574,17 @@ MODALS
   padding: 2rem;
   color: #f8f1e5;
   box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-  min-width: 300px;
+  width: 90%;
   max-width: 600px;
-  max-height: 90vh;
+  max-height: 90dvh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+@media (max-width: 600px) {
+  .modal-content { padding: 1.2rem; }
 }
 
 .menu-list { display: flex; flex-direction: column; gap: 10px; }
@@ -765,10 +767,20 @@ SETUP SCREEN
   100% { transform: scale(1.8); box-shadow: 0 0 15px 15px rgba(255, 235, 59, 0); opacity: 0; }
 }
 
+.piece.hopping { animation: pieceHop 0.15s ease-in-out; }
+@keyframes pieceHop {
+  0% { transform: scale(1) translateY(0); }
+  25% { transform: scale(1.05) translateY(-10px); }
+  50% { transform: scale(1.08) translateY(-14px); }
+  75% { transform: scale(0.98) translateY(0); }
+  100% { transform: scale(1) translateY(0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cowrie.rolling { animation: none; transform: scale(1.1); background-color: #8d6e63; color: transparent; }
   .piece.animating-capture { animation: none; }
   .piece.animating-finish { animation: none; opacity: 0; }
+  .piece.hopping { animation: none; }
 }
 
 
@@ -916,20 +928,154 @@ SETUP SCREEN
 .history-text { color: #f8f1e5; }
 .history-empty { text-align: center; color: #8d6e63; margin-top: 20px; }
 
-/* Mobile logic */
-@media (max-width: 800px) {
-  .game-root { height: auto; overflow: visible; }
-  .game-main-area { flex-wrap: wrap; height: auto; gap: 20px; }
-  .right-column-panel { width: 100%; height: auto; }
-  .info-panel { height: 400px; flex: none; }
-  .board { width: calc(100vw - 16px); height: calc(100vw - 16px); }
+/* 
+================================================
+MOBILE RESPONSIVE LOGIC
+================================================
+*/
+@media (max-width: 900px) {
+  /* 1. Turn Pill */
+  .turn-card {
+    order: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(30,19,16,0.9);
+    border: 2px solid;
+    padding: 6px 16px;
+    border-radius: 20px;
+    width: max-content;
+    max-width: 90vw;
+    margin: 0 auto;
+    min-height: 40px;
+    z-index: 10;
+  }
+  .turn-card-header { margin: 0; display: flex; flex-direction: row; align-items: center; gap: 8px; }
+  .turn-card-icon { width: 16px; height: 16px; }
+  .turn-card-name { font-size: 0.85rem; margin: 0; text-transform: uppercase; }
+  .turn-card-status, .turn-badges { display: none; } /* Hide detailed messages in pill */
+
+  .game-root { height: 100dvh; overflow-y: auto; padding: 5px; }
   
-  .home-left .home-area-dock, .home-right .home-area-dock { width: auto; }
-  .top-layout-bar { position: relative; top: auto; right: auto; padding: 10px; }
+  .game-main-area { 
+    display: flex;
+    flex-direction: column; 
+    gap: 12px; 
+    justify-content: flex-start;
+    padding-bottom: 50px;
+    align-items: center;
+  }
+
+  .top-layout-bar { position: relative; top: auto; right: auto; padding: 5px; width: 100%; display: flex; justify-content: flex-end; }
+  
+  /* Flatten the flex/grid hierarchy */
+  .right-column-panel { display: contents; }
+  .board-and-homes { display: contents; }
+  .home-top, .home-left, .home-right, .home-bottom { display: contents; }
+
+  /* 2. Board must be the hero */
+  .board-container { order: 3; display: flex; justify-content: center; width: 100%; margin: 4px 0; }
+  .board { 
+    width: min(88vw, 430px) !important;
+    height: min(88vw, 430px) !important;
+    max-width: 430px;
+    max-height: 430px;
+    aspect-ratio: 1/1;
+  }
+
+  /* 3. Player docks must be compact */
+  .home-area-dock {
+    order: 2; /* Opponent / inactive docks above board */
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(30,19,16,0.9);
+    border: 2px solid var(--player-color);
+    padding: 4px 12px;
+    border-radius: 20px;
+    height: 36px !important;
+    width: max-content !important;
+    max-width: 95vw !important;
+  }
+  .home-area-dock.active-dock {
+    order: 4; /* Active dock right above the roller */
+    background: linear-gradient(to right, rgba(30,19,16,0.95), rgba(62,39,35,0.95));
+    border-width: 2px;
+    margin-bottom: -15px; /* Pull roller closer */
+    z-index: 5;
+  }
+  .home-name { font-size: 0.8rem; margin: 0; }
+  .home-stats-compact { display: none; } /* Hide stats on mobile */
+  .dock-pieces {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 4px;
+    width: auto !important;
+    grid-template-columns: none !important;
+  }
+  .dock-piece-wrapper { width: 20px !important; height: 20px !important; }
+  .dock-piece-wrapper .piece { width: 20px !important; height: 20px !important; }
+
+  /* Only one active control (Roller) wrapper */
+  .cowrie-action-area { 
+    order: 5; 
+    width: 100%; 
+    display: flex; 
+    justify-content: center; 
+    z-index: 1; /* beneath active dock */
+  }
+
+  /* History Bottom Sheet */
+  .info-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60dvh;
+    z-index: 200;
+    border-radius: 16px 16px 0 0;
+    border-bottom: none;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    background: rgba(30, 19, 16, 0.95);
+    backdrop-filter: blur(10px);
+    border-left: none;
+    border-right: none;
+    box-sizing: border-box;
+  }
+  .info-panel.mobile-closed { transform: translateY(calc(100% - 36px)); }
+  .info-panel.mobile-open { transform: translateY(0); box-shadow: 0 -5px 25px rgba(0,0,0,0.8); }
+  .info-tabs .tab { display: block; padding: 8px; font-size: 0.85rem; height: 36px; box-sizing: border-box; }
+  .menu-btn { padding: 6px 12px; font-size: 0.9rem; }
 }
 
-@media (min-width: 801px) {
-  .info-tabs .tab { display: none; } /* hide mobile toggle on desktop */
+@media (max-height: 500px) and (orientation: landscape) {
+  .game-main-area { flex-direction: row; padding-bottom: 0; justify-content: center; }
+  .board-and-homes {
+    display: grid !important;
+    grid-template-areas:
+      ". ht ."
+      "hl b hr"
+      ". hb .";
+    order: unset;
+  }
+  .home-top, .home-bottom, .home-left, .home-right { display: block !important; }
+  .turn-card, .cowrie-action-area { order: unset; max-width: 300px; }
+  .right-column-panel { display: flex !important; flex-direction: column; width: auto; height: 100%; justify-content: center; }
+  .board { 
+    width: min(45vw, 85dvh) !important; 
+    height: min(45vw, 85dvh) !important; 
+  }
+  .home-left .home-area-dock, .home-right .home-area-dock { flex-direction: column !important; width: 100px !important; height: auto !important; }
+  .home-left .dock-pieces, .home-right .dock-pieces { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+@media (min-width: 901px) {
+  .info-tabs .tab { display: none; }
 }
 
 .board::after {
@@ -1012,6 +1158,7 @@ PREMIUM COWRIE ROLLER
   height: 55px;
 }
 
+
 .cowrie-3d-container {
   width: 100%;
   height: 100%;
@@ -1077,4 +1224,38 @@ PREMIUM COWRIE ROLLER
   padding: 2px 8px;
   border-radius: 4px;
   border: 1px solid #4CAF50;
+}
+
+.piece-choices-menu {
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 100;
+  background: rgba(30, 20, 15, 0.95);
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+  pointer-events: auto;
+}
+
+.choice-btn {
+  background: #3e2723;
+  color: #ffeb3b;
+  border: 1px solid #5d4037;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.choice-btn:hover {
+  background: #5d4037;
+  transform: scale(1.05);
 }
